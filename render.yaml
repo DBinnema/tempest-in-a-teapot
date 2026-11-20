@@ -1,0 +1,21 @@
+# Render blueprint: one free web service serves the client, the token
+# exchange and the Colyseus websocket from a single origin.
+services:
+  - type: web
+    name: tempest-in-a-teapot
+    runtime: node
+    plan: free
+    # devDependencies are needed to build (TypeScript, Vite, Phaser).
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      # Baked into the client bundle at build time (same value as DISCORD_CLIENT_ID).
+      - key: VITE_DISCORD_CLIENT_ID
+        sync: false

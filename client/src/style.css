@@ -1,0 +1,139 @@
+/* Layout only. Colours and fonts arrive as CSS variables from THEME (ui.ts).
+   Everything is sized in em off one fluid root size, so the same UI works
+   from a small Discord panel up to fullscreen. */
+html, body { margin: 0; height: 100%; overflow: hidden; background: #fde7c7; }
+body { font-family: var(--body); color: var(--ink); user-select: none; -webkit-user-select: none; }
+#game { position: fixed; inset: 0; }
+#game canvas { display: block; }
+#ui { position: fixed; inset: 0; pointer-events: none; font-size: clamp(9px, 0.55vw + 0.9vh + 3px, 17px); line-height: 1.25; }
+#ui button, #ui .panel, #ui .slot, #roster { pointer-events: auto; }
+kbd { font: inherit; font-size: 0.8em; background: var(--paper); border: 0.1em solid var(--ink); border-bottom-width: 0.22em; border-radius: 0.3em; padding: 0 0.35em; margin: 0 0.1em; }
+i { font-style: normal; }
+
+.panel { background: var(--paper); border: 0.18em solid var(--ink); border-radius: 0.9em; box-shadow: 0 0.35em 0 var(--shadow); padding: 0.8em 1em; }
+button { font-family: var(--display); font-size: 1em; color: var(--ink); background: var(--paperDim); border: 0.16em solid var(--ink); border-radius: 0.6em; padding: 0.35em 0.8em; cursor: pointer; box-shadow: 0 0.22em 0 var(--ink); transition: transform 0.06s; }
+button:hover { filter: brightness(1.05); }
+button:active { transform: translateY(0.18em); box-shadow: 0 0.04em 0 var(--ink); }
+button[disabled] { opacity: 0.4; cursor: default; }
+button.big { font-size: 1.35em; background: var(--accent); color: #fff; padding: 0.4em 1.1em; text-shadow: 0 0.08em 0 var(--ink); }
+button.big.on { background: var(--accent2); }
+
+/* ---- top bar ---- */
+#top { position: absolute; top: 0.6em; left: 0.7em; right: 0.7em; display: flex; justify-content: space-between; align-items: flex-start; gap: 1em; }
+#phasebox { background: var(--paper); border: 0.18em solid var(--ink); border-radius: 0.8em; padding: 0.35em 0.8em 0.5em; min-width: 13.5em; box-shadow: 0 0.3em 0 var(--shadow); position: relative; }
+#phasename { padding-right: 2.2em; white-space: nowrap; }
+#phasename b { font-family: var(--display); font-size: 1.5em; margin-right: 0.5em; }
+#phasename span { font-size: 0.85em; opacity: 0.7; }
+#timer { height: 0.5em; background: var(--paperDim); border: 0.1em solid var(--ink); border-radius: 1em; overflow: hidden; margin-top: 0.25em; }
+#timer i { display: block; height: 100%; background: var(--accent2); width: 100%; }
+#timer i.urgent { background: var(--accent); }
+#timernum { position: absolute; right: 0.7em; top: 0.35em; font-family: var(--display); font-size: 1.3em; }
+#roster { display: flex; flex-direction: column; gap: 0.2em; align-items: flex-end; transition: opacity 0.4s; }
+/* During the Pour the roster is stale on purpose (no spoilers) and sits over the show: fade it back. */
+body[data-phase="RESOLVE"] #roster { opacity: 0.45; }
+body[data-phase="RESOLVE"] #roster:hover { opacity: 1; }
+.rp { display: flex; align-items: center; gap: 0.4em; background: var(--paper); border: 0.13em solid var(--ink); border-radius: 2em; padding: 0.1em 0.6em 0.1em 0.25em; font-size: 0.9em; }
+.rp.me { box-shadow: 0 0 0 0.16em var(--gold); }
+.rp.dead { opacity: 0.5; }
+.rp.dead .nm { text-decoration: line-through; }
+.rp i, .rv i, .award i, td i { display: inline-block; width: 0.95em; height: 0.95em; border-radius: 50%; border: 0.12em solid var(--ink); flex: none; vertical-align: -0.15em; margin-right: 0.3em; }
+.rp .nm { max-width: 8.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar { display: inline-block; width: 4.2em; height: 0.55em; background: var(--paperDim); border: 0.1em solid var(--ink); border-radius: 1em; overflow: hidden; }
+.bar b { display: block; height: 100%; background: var(--accent); transition: width 0.6s; }
+.rp em { font-style: normal; width: 0.9em; text-align: center; font-weight: bold; color: var(--accent2); }
+
+/* ---- callouts ---- */
+#callouts { position: absolute; top: 17%; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 0.2em; }
+.callout { font-family: var(--display); font-size: 2.6em; color: #fff; -webkit-text-stroke: 0.045em var(--ink); paint-order: stroke fill; text-shadow: 0 0.09em 0 var(--ink), 0 0.14em 0 var(--shadow); animation: pop 1.9s both; white-space: nowrap; }
+.callout.kill { color: var(--accent); font-size: 3.2em; }
+.callout.final { color: var(--gold); font-size: 3.8em; }
+.callout.small { font-size: 1.5em; }
+.callout.beat { color: var(--accent2); }
+@keyframes pop { 0% { transform: scale(0.2) rotate(-6deg); opacity: 0; } 10% { transform: scale(1.18) rotate(2deg); opacity: 1; } 18% { transform: scale(1) rotate(-1deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-0.4em) scale(0.96); } }
+
+/* ---- lobby / game over ---- */
+#center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0.8em; }
+.lobby, .over { max-width: 46em; width: 100%; max-height: 96%; overflow: auto; text-align: center; box-sizing: border-box; }
+h1 { font-family: var(--display); font-size: 2.7em; margin: 0; color: var(--accent); -webkit-text-stroke: 0.03em var(--ink); text-shadow: 0 0.07em 0 var(--ink); line-height: 1.05; }
+h2 { font-family: var(--display); font-size: 1.4em; margin: 0 0 0.3em; }
+.tag { margin: 0.1em 0 0.7em; font-style: italic; opacity: 0.75; }
+.cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5em; min-height: 3.6em; }
+.card { background: #fff; border: 0.14em solid var(--ink); border-radius: 0.5em; padding: 0.35em 0.7em 0.35em 2.4em; position: relative; text-align: left; min-width: 7.5em; opacity: 0.75; }
+.card.ready { opacity: 1; box-shadow: 0 0 0 0.18em var(--accent2); }
+.card.me b::after { content: " (you)"; font-weight: normal; opacity: 0.6; font-size: 0.8em; }
+.card i { position: absolute; left: 0.5em; top: 50%; width: 1.4em; height: 1.2em; margin-top: -0.6em; border-radius: 45%; background: var(--g); border: 0.14em solid var(--ink); }
+.card b { display: block; }
+.card span { font-size: 0.8em; opacity: 0.7; }
+.how { display: flex; gap: 0.6em; margin: 0.8em 0; text-align: left; font-size: 0.88em; }
+.how div { flex: 1; background: var(--paperDim); border-radius: 0.6em; padding: 0.5em 0.6em; }
+.how b { display: block; font-family: var(--display); color: var(--accent); }
+.row { display: flex; gap: 0.6em; justify-content: center; align-items: center; flex-wrap: wrap; }
+.count { font-family: var(--display); font-size: 1.6em; }
+.small { font-size: 0.8em; opacity: 0.65; margin: 0.6em 0 0; }
+table { margin: 0.4em auto; border-collapse: collapse; }
+td, th { padding: 0.15em 0.7em; text-align: left; }
+th { font-size: 0.75em; opacity: 0.6; font-weight: normal; }
+tr.win td { font-weight: bold; background: var(--paperDim); }
+.awards { display: flex; flex-wrap: wrap; gap: 0.4em; justify-content: center; margin-top: 0.4em; }
+.award { background: var(--paperDim); border-radius: 2em; padding: 0.15em 0.7em; font-size: 0.85em; }
+.award span { margin-left: 0.4em; opacity: 0.75; }
+
+/* ---- bottom: move hint / plan ---- */
+#bottom { position: absolute; left: 0; right: 0; bottom: 0.6em; display: flex; justify-content: center; padding: 0 0.6em; }
+.hint { display: flex; gap: 1.2em; align-items: center; padding: 0.45em 1em; }
+.hint.locked b { font-family: var(--display); color: var(--accent2); font-size: 1.2em; }
+.spoon { display: flex; align-items: center; gap: 0.4em; }
+.spoon .bar b { background: var(--gold); transition: none; }
+.plan { display: flex; gap: 0.7em; align-items: stretch; padding: 0.55em 0.7em; max-width: 100%; box-sizing: border-box; }
+.slots { display: flex; flex-direction: column; gap: 0.3em; justify-content: center; }
+.slot { display: flex; align-items: center; gap: 0.35em; border: 0.14em dashed var(--ink); border-radius: 0.55em; padding: 0.15em 0.5em; cursor: pointer; background: var(--paperDim); min-width: 12.5em; opacity: 0.7; }
+.slot.active { border-style: solid; background: #fff; opacity: 1; box-shadow: 0 0 0 0.16em var(--gold); }
+.slot small { font-size: 0.7em; opacity: 0.7; width: 5.2em; }
+.slot img { width: 1.5em; height: 1.5em; }
+.slot .none { font-weight: normal; font-style: italic; opacity: 0.5; }
+.slot .x { margin-left: auto; padding: 0 0.3em; opacity: 0.55; }
+.slot .x:hover { opacity: 1; color: var(--accent); }
+.mid { display: flex; flex-direction: column; gap: 0.3em; min-width: 0; }
+.tray { display: flex; gap: 0.3em; }
+.wpn { position: relative; display: flex; flex-direction: column; align-items: center; width: 5em; padding: 0.25em 0.1em 0.15em; font-family: var(--body); font-size: 0.9em; }
+.wpn.on { background: var(--gold); }
+.wpn img { width: 2.1em; height: 2.1em; }
+.wpn span { font-size: 0.72em; white-space: nowrap; }
+.wpn kbd { position: absolute; left: 0.2em; top: 0.15em; font-size: 0.65em; }
+.wpn em { position: absolute; right: 0.3em; top: 0.1em; font-style: normal; font-size: 0.75em; font-weight: bold; }
+.blurb { font-size: 0.82em; min-height: 1.2em; }
+.blurb span { opacity: 0.55; margin-left: 0.6em; font-size: 0.9em; }
+.lock { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lock small { font-family: var(--body); font-size: 0.5em; opacity: 0.85; text-shadow: none; }
+
+/* ---- recap ---- */
+#side { position: absolute; left: 0.7em; bottom: 0.7em; max-width: min(27em, 60%); }
+.recap { animation: slide 0.35s both; }
+.recap p { margin: 0.18em 0; font-size: 0.95em; }
+.recap p.kill { font-weight: bold; }
+.recap p.dim { opacity: 0.65; font-size: 0.85em; }
+.recap p.warn { margin-top: 0.5em; color: #9a4a0b; font-weight: bold; }
+.reveal { display: flex; flex-wrap: wrap; gap: 0.25em 0.9em; margin-top: 0.5em; padding-top: 0.4em; border-top: 0.1em dashed var(--ink); font-size: 0.85em; }
+.rv { display: flex; align-items: center; gap: 0.15em; }
+.rv img, .rv u { width: 1.35em; height: 1.35em; }
+.rv u { display: inline-block; border: 0.1em dashed var(--ink); border-radius: 50%; opacity: 0.3; box-sizing: border-box; transform: scale(0.6); }
+@keyframes slide { from { transform: translateY(1.5em); opacity: 0; } }
+
+#corner { position: absolute; right: 0.7em; bottom: 0.6em; }
+#corner button { font-family: var(--body); padding: 0.1em 0.55em; opacity: 0.8; }
+#status { position: absolute; top: 45%; left: 0; right: 0; text-align: center; }
+.pill { display: inline-block; background: var(--ink); color: var(--paper); border-radius: 2em; padding: 0.4em 1.2em; font-family: var(--display); font-size: 1.2em; }
+
+/* Narrow panels: icons only, tighter chrome. */
+@media (max-width: 760px) {
+  .wpn { width: 3.1em; }
+  .wpn span, .blurb span, .lock small { display: none; }
+  .slot { min-width: 8.5em; }
+  .slot small { width: auto; }
+  .how { font-size: 0.8em; }
+  .rp .nm { max-width: 5em; }
+}
+@media (max-height: 420px) {
+  .how, .tag { display: none; }
+  .blurb { display: none; }
+}
